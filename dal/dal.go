@@ -3,13 +3,13 @@ package dal
 import (
 	"fmt"
 
-	"github.com/RaymondCode/simple-demo/controller"
+	"github.com/CDsmen/douyin/controller"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-const MySQLDefaultDSN = "root:12345678@tcp(localhost:3306)/lastproject?charset=utf8&parseTime=True&loc=Local"
+const MySQLDefaultDSN = "root:mm12345678@tcp(localhost:3306)/lastproject?charset=utf8&parseTime=True&loc=Local"
 
 var DB *gorm.DB
 

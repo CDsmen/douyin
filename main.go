@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/RaymondCode/simple-demo/dal"
-	"github.com/RaymondCode/simple-demo/service"
+	"github.com/CDsmen/douyin/dal"
+	"github.com/CDsmen/douyin/service"
 	"github.com/gin-gonic/gin"
 )
 
