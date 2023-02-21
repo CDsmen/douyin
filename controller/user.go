@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/CDsmen/douyin/dal"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"sync/atomic"
@@ -78,15 +79,29 @@ func Login(c *gin.Context) {
 
 func UserInfo(c *gin.Context) {
 	token := c.Query("token")
+	user_id := c.Query("user_id")
 
-	if user, exist := usersLoginInfo[token]; exist {
+	var user User
+	err := dal.DB.Raw("CALL user_info(?, ?)", user_id, token).Scan(&user).Error
+	if err != nil {
+		c.JSON(http.StatusOK, UserResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+		})
+	} else {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 0},
 			User:     user,
 		})
-	} else {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
 	}
+
+	//if user, exist := usersLoginInfo[token]; exist {
+	//	c.JSON(http.StatusOK, UserResponse{
+	//		Response: Response{StatusCode: 0},
+	//		User:     user,
+	//	})
+	//} else {
+	//	c.JSON(http.StatusOK, UserResponse{
+	//		Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+	//	})
+	//}
 }

@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-	// zhende sb
 	go service.RunMessageServer()
 
 	r := gin.Default()
