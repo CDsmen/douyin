@@ -21,3 +21,6 @@
 go.work
 
 .idea
+
+#initDB
+dal.go

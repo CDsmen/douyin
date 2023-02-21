@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const MySQLDefaultDSN = "root:12345678@tcp(localhost:3306)/lastproject?charset=utf8&parseTime=True&loc=Local"
+const MySQLDefaultDSN = "root:mm12345678@tcp(localhost:3306)/lastproject?charset=utf8&parseTime=True&loc=Local"
 
 var DB *gorm.DB
 
