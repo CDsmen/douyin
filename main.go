@@ -7,11 +7,12 @@ import (
 )
 
 func main() {
+	// zhende sb
 	go service.RunMessageServer()
 
 	r := gin.Default()
 
-	dal.InitDB();
+	dal.InitDB()
 
 	initRouter(r)
 
