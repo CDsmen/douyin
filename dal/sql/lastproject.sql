@@ -25,14 +25,14 @@ DROP TABLE IF EXISTS `comment`;
 CREATE TABLE `comment` (
   `commentid` int NOT NULL AUTO_INCREMENT,
   `userid` int NOT NULL,
-  `videoid` int NOT NULL,
+  `vedioid` int DEFAULT NULL,
   `content` varchar(50) DEFAULT NULL,
   `create_data` datetime DEFAULT NULL,
   PRIMARY KEY (`commentid`),
   KEY `FK_user_comment` (`userid`),
-  KEY `FK_vedio_comment` (`videoid`),
+  KEY `FK_vedio_comment` (`vedioid`),
   CONSTRAINT `FK_user_comment` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `FK_vedio_comment` FOREIGN KEY (`videoid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  CONSTRAINT `FK_vedio_comment` FOREIGN KEY (`vedioid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -136,6 +136,26 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'lastproject'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `add_comment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_comment`(IN _vedioid int, IN _userid int, IN _content varchar(50))
+BEGIN
+	insert into comment (userid,vedioid,content,create_data) value(_userid,_vedioid,_content,now());
+	select commentid id, content, date_format(create_data, '%m-%d') from comment where _vedioid = vedioid and _userid = userid;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `add_favorite` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -291,4 +311,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-21 21:45:49
+-- Dump completed on 2023-02-21 23:38:39
