@@ -23,4 +23,4 @@ go.work
 .idea
 
 #initDB
-dal.go
+/dal/dal.go
