@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -17,8 +18,17 @@ type CommentActionResponse struct {
 
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
-	token := c.Query("token")
+	strToken := c.Query("token")
 	actionType := c.Query("action_type")
+
+	claim, err := myjwt.VerifyAction(strToken)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+	username = claim.Username
+	password = claim.Password
+	// c.String(http.StatusOK, "verify,", claim.Username, claim.Password)
 
 	if user, exist := usersLoginInfo[token]; exist {
 		if actionType == "1" {

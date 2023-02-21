@@ -96,6 +96,7 @@ func Login(c *gin.Context) {
 
 	var userId int64
 	err := dal.DB.Raw("CALL login(?, ?)", username, password).Scan(&userId).Error
+
 	if err != nil {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql Login Failed"},
