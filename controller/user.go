@@ -2,9 +2,10 @@ package controller
 
 import (
 	"github.com/CDsmen/douyin/dal"
+	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sync/atomic"
+	"time"
 )
 
 // usersLoginInfo use map to store user info, and key is username+password for demo
@@ -37,46 +38,109 @@ func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	token := username + password
-
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
+	var userId int64
+	err := dal.DB.Raw("CALL register(?, ?)", username, password).Scan(&userId).Error
+	if err != nil {
+		c.JSON(http.StatusOK, UserResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "Mysql Register Failed"},
 		})
 	} else {
-		atomic.AddInt64(&userIdSequence, 1)
-		newUser := User{
-			Id:   userIdSequence,
-			Name: username,
+		if userId == 0 {
+			c.JSON(http.StatusOK, UserResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
+			})
+		} else {
+			// 获得token
+			claims := &myjwt.JWTClaims{
+				Username: username,
+				Password: password,
+			}
+			claims.IssuedAt = time.Now().Unix()
+			claims.ExpiresAt = time.Now().Add(time.Second * time.Duration(myjwt.ExpireTime)).Unix()
+			signedToken, err := myjwt.GetToken(claims)
+			if err != nil {
+				c.String(http.StatusNotFound, err.Error())
+				return
+			}
+
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{StatusCode: 0},
+				UserId:   userId,
+				Token:    signedToken,
+			})
 		}
-		usersLoginInfo[token] = newUser
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   userIdSequence,
-			Token:    username + password,
-		})
 	}
+
+	//if _, exist := usersLoginInfo[token]; exist { // 检测token
+	//	c.JSON(http.StatusOK, UserLoginResponse{
+	//		Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
+	//	})
+	//} else { // 新增用户
+	//	atomic.AddInt64(&userIdSequence, 1)
+	//	newUser := User{
+	//		Id:   userIdSequence,
+	//		Name: username,
+	//	}
+	//	usersLoginInfo[token] = newUser
+	//	c.JSON(http.StatusOK, UserLoginResponse{
+	//		Response: Response{StatusCode: 0},
+	//		UserId:   userIdSequence,
+	//		Token:    username + password,
+	//	})
+	//}
 }
 
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	token := username + password
-
-	if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   user.Id,
-			Token:    token,
+	var userId int64
+	err := dal.DB.Raw("CALL login(?, ?)", username, password).Scan(&userId).Error
+	if err != nil {
+		c.JSON(http.StatusOK, UserResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "Mysql Login Failed"},
 		})
 	} else {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
+		if userId == 0 {
+			c.JSON(http.StatusOK, UserResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "User not exist"},
+			})
+		} else {
+			// 获得token
+			claims := &myjwt.JWTClaims{
+				Username: username,
+				Password: password,
+			}
+			claims.IssuedAt = time.Now().Unix()
+			claims.ExpiresAt = time.Now().Add(time.Second * time.Duration(myjwt.ExpireTime)).Unix()
+			signedToken, err := myjwt.GetToken(claims)
+			if err != nil {
+				c.String(http.StatusNotFound, err.Error())
+				return
+			}
+
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{StatusCode: 0},
+				UserId:   userId,
+				Token:    signedToken,
+			})
+		}
 	}
+
+	//if user, exist := usersLoginInfo[token]; exist {
+	//	c.JSON(http.StatusOK, UserLoginResponse{
+	//		Response: Response{StatusCode: 0},
+	//		UserId:   user.Id,
+	//		Token:    token,
+	//	})
+	//} else {
+	//	c.JSON(http.StatusOK, UserLoginResponse{
+	//		Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+	//	})
+	//}
 }
 
+// 调用mysql的存储过程"user_info" 参数为：user_id
 func UserInfo(c *gin.Context) {
 	// token := c.Query("token")
 	user_id := c.Query("user_id")

@@ -151,25 +151,19 @@ UNLOCK TABLES;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `user_info`(IN user_id int)
 BEGIN
-	declare t_f INT;
-    declare w_c INT;
-    declare f_c INT;
+  declare t_f INT;
+  declare w_c INT;
+  declare f_c INT;
 
-	select COUNT(*) into t_f
-			from video,favorite
-            where video.videoid = favorite.videoid and video.userid = user_id;
+  select COUNT(*) into t_f
+  from video,favorite
+  where video.videoid = favorite.videoid and video.userid = user_id;
 
-	select COUNT(*) into w_c
-			from video
-            where userid = user_id;
+  select COUNT(*) into w_c from video where userid = user_id;
 
-	select COUNT(*) into f_c
-			from favorite
-			where userid = user_id;
+  select COUNT(*) into f_c from favorite where userid = user_id;
 
-	select userid id, username name,0 follow_count,0 follower_count, false is_follow,
-			t_f total_favorited, w_c work_count,f_c favorite_count
-            from user where userid = user_id;
+  select userid id, username name,0 follow_count,0 follower_count, false is_follow, t_f total_favorited, w_c work_count,f_c favorite_count from user where userid = user_id;
             
 END ;;
 DELIMITER ;

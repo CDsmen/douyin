@@ -11,6 +11,9 @@ func initRouter(r *gin.Engine) {
 
 	apiRouter := r.Group("/douyin")
 
+	//apiRouter.GET("/login2/:username/:password", myjwt.Login)
+	//apiRouter.GET("/verify/:token", myjwt.Verify)
+
 	// basic apis
 	apiRouter.GET("/feed/", controller.Feed)
 	apiRouter.GET("/user/", controller.UserInfo)
