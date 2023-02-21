@@ -23,16 +23,16 @@ DROP TABLE IF EXISTS `comment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comment` (
-  `commentid` int NOT NULL,
+  `commentid` int NOT NULL AUTO_INCREMENT,
   `userid` int NOT NULL,
-  `videoid` int NOT NULL,
+  `vedioid` int DEFAULT NULL,
   `content` varchar(50) DEFAULT NULL,
-  `create_data` varchar(20) DEFAULT NULL,
+  `create_data` datetime DEFAULT NULL,
   PRIMARY KEY (`commentid`),
   KEY `FK_user_comment` (`userid`),
-  KEY `FK_vedio_comment` (`videoid`),
+  KEY `FK_vedio_comment` (`vedioid`),
   CONSTRAINT `FK_user_comment` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `FK_vedio_comment` FOREIGN KEY (`videoid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  CONSTRAINT `FK_vedio_comment` FOREIGN KEY (`vedioid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -53,7 +53,7 @@ DROP TABLE IF EXISTS `favorite`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `favorite` (
-  `likeid` int NOT NULL,
+  `likeid` int NOT NULL AUTO_INCREMENT,
   `userid` int NOT NULL,
   `videoid` int NOT NULL,
   PRIMARY KEY (`likeid`),
@@ -61,7 +61,7 @@ CREATE TABLE `favorite` (
   KEY `FK_vedio_like` (`videoid`),
   CONSTRAINT `FK_user_like` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `FK_vedio_like` FOREIGN KEY (`videoid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +70,7 @@ CREATE TABLE `favorite` (
 
 LOCK TABLES `favorite` WRITE;
 /*!40000 ALTER TABLE `favorite` DISABLE KEYS */;
-INSERT INTO `favorite` VALUES (1,1,1);
+INSERT INTO `favorite` VALUES (1,1,1),(2,4,1);
 /*!40000 ALTER TABLE `favorite` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -84,17 +84,14 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `username` varchar(32) DEFAULT NULL,
   `password` varchar(32) DEFAULT NULL,
-  `userid` int NOT NULL,
-  `follow_count` int DEFAULT NULL,
-  `follower_count` int DEFAULT NULL,
+  `userid` int NOT NULL AUTO_INCREMENT,
+  `follow_count` int DEFAULT '0',
+  `follower_count` int DEFAULT '0',
   `avatar` varchar(60) DEFAULT NULL,
   `background_image` varchar(60) DEFAULT NULL,
   `signature` varchar(60) DEFAULT NULL,
-  `total_favorited` varchar(60) DEFAULT NULL,
-  `work_count` int DEFAULT NULL,
-  `favorite_count` int DEFAULT NULL,
   PRIMARY KEY (`userid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -103,7 +100,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('testman','1234',1,0,0,'0','0','0','0',0,0);
+INSERT INTO `user` VALUES ('testman','1234',1,0,0,'not','not','not'),('testman2','123',2,NULL,NULL,NULL,NULL,NULL),('testman3','123444',3,NULL,NULL,NULL,NULL,NULL),('testman4','123444',4,0,0,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -115,7 +112,7 @@ DROP TABLE IF EXISTS `video`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `video` (
-  `videoid` int NOT NULL,
+  `videoid` int NOT NULL AUTO_INCREMENT,
   `userid` int NOT NULL,
   `play_url` varchar(60) DEFAULT NULL,
   `cover_url` varchar(60) DEFAULT NULL,
@@ -123,7 +120,7 @@ CREATE TABLE `video` (
   PRIMARY KEY (`videoid`),
   KEY `FK_publish` (`userid`),
   CONSTRAINT `FK_publish` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -132,13 +129,140 @@ CREATE TABLE `video` (
 
 LOCK TABLES `video` WRITE;
 /*!40000 ALTER TABLE `video` DISABLE KEYS */;
-INSERT INTO `video` VALUES (1,1,'abab','abab','testvideo');
+INSERT INTO `video` VALUES (1,1,'not','not','testvedio');
 /*!40000 ALTER TABLE `video` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
 -- Dumping routines for database 'lastproject'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `add_comment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_comment`(IN _vedioid int, IN _userid int, IN _content varchar(50))
+BEGIN
+	insert into comment (userid,vedioid,content,create_data) value(_userid,_vedioid,_content,now());
+	select commentid id, content, date_format(create_data, '%m-%d') from comment where _vedioid = vedioid and _userid = userid;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `add_favorite` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_favorite`(IN _userid int, IN _vedioid int)
+BEGIN
+	IF not exists(select * from favorite where _userid = userid and _vedioid = vedioid) THEN
+        insert into favorite (userid,vedioid)  VALUES (_userid,_vedioid);
+	end if;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `add_vedio` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_vedio`(IN _userid int, IN _title varchar(30), IN _play_url varchar(60), IN _cover_url varchar(60))
+BEGIN
+	insert into vedio (userid,title,paly_url,cover_url) 
+                 VALUES (_userid,_title,_paly_url,_cover_url);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `del_favorite` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `del_favorite`(IN _userid int, IN _vedioid int)
+BEGIN
+	delete from favorite where _userid = userid and _vedioid = vedioid;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `login` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `login`(IN _username VARCHAR(32), IN _password VARCHAR(32))
+BEGIN
+    IF exists(select * from user where username = _username and password = _password) THEN
+        select userid user_id from user where username = _username;
+	else
+        select 0 user_id ;
+	end if;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `register` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `register`(IN _username VARCHAR(32), IN _password VARCHAR(32))
+BEGIN
+    IF exists(select * from user where username = _username) THEN
+	    select 0 user_id ;
+	else
+        insert into user (username,password)  VALUES (_username,_password);
+        select userid user_id from user where username = _username;
+	end if;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `user_info` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -181,4 +305,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-21 15:41:18
+-- Dump completed on 2023-02-21 23:38:39
