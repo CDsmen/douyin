@@ -33,7 +33,7 @@ CREATE TABLE `comment` (
   KEY `FK_vedio_comment` (`vedioid`),
   CONSTRAINT `FK_user_comment` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `FK_vedio_comment` FOREIGN KEY (`vedioid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,6 +42,7 @@ CREATE TABLE `comment` (
 
 LOCK TABLES `comment` WRITE;
 /*!40000 ALTER TABLE `comment` DISABLE KEYS */;
+INSERT INTO `comment` VALUES (1,3,1,'good!','2023-02-22 01:41:49'),(2,4,1,'very good!','2023-02-22 02:20:12'),(3,4,1,'111','2023-02-22 10:30:18'),(4,4,1,'1','2023-02-22 10:34:05'),(5,4,1,'hh','2023-02-22 10:39:08'),(6,4,1,'hhhhhh!','2023-02-22 02:39:56'),(7,4,1,'hhhhhh!','2023-02-22 02:42:03'),(8,4,1,'tttaa!!!','2023-02-22 10:42:15'),(9,4,1,'fgwd!','2023-02-22 10:42:28');
 /*!40000 ALTER TABLE `comment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -149,7 +150,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_comment`(IN _vedioid int, IN _userid int, IN _content varchar(50))
 BEGIN
 	insert into comment (userid,vedioid,content,create_data) value(_userid,_vedioid,_content,now());
-	select commentid id, content, date_format(create_data, '%m-%d') from comment where _vedioid = vedioid and _userid = userid;
+	select commentid id, content, date_format(create_data, '%m-%d') create_date from comment order by commentid desc limit 1;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -189,8 +190,26 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_vedio`(IN _userid int, IN _title varchar(30), IN _play_url varchar(60), IN _cover_url varchar(60))
 BEGIN
-	insert into vedio (userid,title,paly_url,cover_url) 
-                 VALUES (_userid,_title,_paly_url,_cover_url);
+	insert into vedio (userid,title,paly_url,cover_url) VALUES (_userid,_title,_paly_url,_cover_url);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `del_comment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `del_comment`(IN _commentid int)
+BEGIN
+	delete from comment where _commentid = commentid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -210,6 +229,26 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `del_favorite`(IN _userid int, IN _vedioid int)
 BEGIN
 	delete from favorite where _userid = userid and _vedioid = vedioid;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `list_comment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `list_comment`(IN _vedioid int)
+BEGIN
+	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date
+		from comment where vedioid = _vedioid order by create_data desc;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -255,7 +294,7 @@ BEGIN
 	    select 0 user_id ;
 	else
         insert into user (username,password)  VALUES (_username,_password);
-        select userid user_id from user where username = _username;
+        select userid user_id from user order by userid desc limit 1;
 	end if;
 END ;;
 DELIMITER ;
@@ -267,27 +306,25 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `user_info`(IN user_id int)
 BEGIN
-  declare t_f INT;
-  declare w_c INT;
-  declare f_c INT;
+	declare t_f INT;
+    declare w_c INT;
+    declare f_c INT;
 
-  select COUNT(*) into t_f
-  from video,favorite
-  where video.videoid = favorite.videoid and video.userid = user_id;
+	select COUNT(*) into t_f from video,favorite where video.videoid = favorite.videoid and video.userid = user_id;
 
-  select COUNT(*) into w_c from video where userid = user_id;
+	select COUNT(*) into w_c from video where userid = user_id;
 
-  select COUNT(*) into f_c from favorite where userid = user_id;
+	select COUNT(*) into f_c from favorite where userid = user_id;
 
-  select userid id, username name,0 follow_count,0 follower_count, false is_follow, t_f total_favorited, w_c work_count,f_c favorite_count from user where userid = user_id;
+	select userid id, username name,0 follow_count,0 follower_count, false is_follow, t_f total_favorited, w_c work_count,f_c favorite_count from user where userid = user_id;
             
 END ;;
 DELIMITER ;
@@ -305,4 +342,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-21 23:38:39
+-- Dump completed on 2023-02-22 12:16:13
