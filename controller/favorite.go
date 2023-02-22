@@ -5,6 +5,7 @@ import (
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // FavoriteAction no practical effect, just check if token is valid
@@ -60,7 +61,7 @@ func FavoriteAction(c *gin.Context) {
 
 // FavoriteList all users have same favorite video list
 func FavoriteList(c *gin.Context) {
-	//userid := c.Query("user_id")
+	userid := c.Query("user_id")
 	strToken := c.Query("token")
 
 	// token不存在
@@ -71,17 +72,17 @@ func FavoriteList(c *gin.Context) {
 	}
 
 	// 解析token
-	//claim, err := myjwt.VerifyAction(strToken)
-	//if err != nil {
-	//	c.String(http.StatusNotFound, err.Error())
-	//	return
-	//}
+	claim, err := myjwt.VerifyAction(strToken)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
 
-	//// 鉴权不通过
-	//if claim.UserID != strconv.Atoi(userid) {
-	//	c.String(http.StatusOK, "Userid != token")
-	//	return
-	//}
+	// 鉴权不通过
+	if strconv.FormatInt(claim.UserID, 10) != userid {
+		c.String(http.StatusOK, "Userid != token")
+		return
+	}
 
 	//var videoList VideosList
 	//err = dal.DB.Raw("CALL favorite_list(？)", userid).Scan(&comment).Error

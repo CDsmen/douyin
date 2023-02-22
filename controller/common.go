@@ -15,8 +15,6 @@ type Video struct {
 	IsFavorite    bool   `json:"is_favorite,omitempty"`
 }
 
-var VideosList = []Video{}
-
 type Comment struct {
 	Id         int64  `json:"id,omitempty"`
 	User       User   `json:"user"`
@@ -52,3 +50,5 @@ type MessagePushEvent struct {
 	FromUserId int64  `json:"user_id,omitempty"`
 	MsgContent string `json:"msg_content,omitempty"`
 }
+
+var SeverIp string

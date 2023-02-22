@@ -5,6 +5,7 @@ import (
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -149,11 +150,31 @@ func Login(c *gin.Context) {
 
 // 调用mysql的存储过程"user_info" 参数为：user_id
 func UserInfo(c *gin.Context) {
-	// token := c.Query("token")
 	userid := c.Query("user_id")
+	strToken := c.Query("token")
+
+	// token不存在
+	err := myjwt.FindToken(strToken)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	// 解析token
+	claim, err := myjwt.VerifyAction(strToken)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	// 鉴权不通过
+	if strconv.FormatInt(claim.UserID, 10) != userid {
+		c.String(http.StatusOK, "Userid != token")
+		return
+	}
 
 	var user User
-	err := dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
+	err = dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
 	if err != nil {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
