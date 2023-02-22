@@ -23,9 +23,23 @@ import (
 //}
 
 const (
-	ErrorReason_ServerBusy = "服务器繁忙"
-	ErrorReason_ReLogin    = "请重新登陆"
+	ErrorReason_ServerBusy   = "服务器繁忙"
+	ErrorReason_ReLogin      = "请重新登陆"
+	ErrorReason_TokenNotExit = "Token not exit"
 )
+
+var takenMap = map[string]int{}
+
+func TakenGetMap(taken string) {
+	takenMap[taken] = 1
+}
+
+func FindToken(taken string) error {
+	if takenMap[taken] == 1 {
+		return nil
+	}
+	return errors.New(ErrorReason_TokenNotExit)
+}
 
 func sayHello(c *gin.Context) {
 	strToken := c.Param("token")
@@ -39,7 +53,7 @@ func sayHello(c *gin.Context) {
 
 type JWTClaims struct { // token里面添加用户信息，验证token后可能会用到用户信息
 	jwt.StandardClaims
-	//UserID      int      `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Password string `json:"password"`
 	Username string `json:"username"`
 	//FullName    string   `json:"full_name"`

@@ -52,6 +52,7 @@ func Register(c *gin.Context) {
 		} else {
 			// 获得token
 			claims := &myjwt.JWTClaims{
+				UserID:   userId,
 				Username: username,
 				Password: password,
 			}
@@ -62,6 +63,8 @@ func Register(c *gin.Context) {
 				c.String(http.StatusNotFound, err.Error())
 				return
 			}
+
+			myjwt.TakenGetMap(signedToken)
 
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 0},
@@ -109,6 +112,7 @@ func Login(c *gin.Context) {
 		} else {
 			// 获得token
 			claims := &myjwt.JWTClaims{
+				UserID:   userId,
 				Username: username,
 				Password: password,
 			}
@@ -119,6 +123,8 @@ func Login(c *gin.Context) {
 				c.String(http.StatusNotFound, err.Error())
 				return
 			}
+
+			myjwt.TakenGetMap(signedToken)
 
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 0},
@@ -144,10 +150,10 @@ func Login(c *gin.Context) {
 // 调用mysql的存储过程"user_info" 参数为：user_id
 func UserInfo(c *gin.Context) {
 	// token := c.Query("token")
-	user_id := c.Query("user_id")
+	userid := c.Query("user_id")
 
 	var user User
-	err := dal.DB.Raw("CALL user_info(?)", user_id).Scan(&user).Error
+	err := dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
 	if err != nil {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
