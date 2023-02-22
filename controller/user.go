@@ -45,11 +45,13 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql Register Failed"},
 		})
+		return
 	} else {
 		if userId == 0 {
 			c.JSON(http.StatusOK, UserResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
 			})
+			return
 		} else {
 			// 获得token
 			claims := &myjwt.JWTClaims{
@@ -72,6 +74,7 @@ func Register(c *gin.Context) {
 				UserId:   userId,
 				Token:    signedToken,
 			})
+			return
 		}
 	}
 
@@ -105,11 +108,13 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql Login Failed"},
 		})
+		return
 	} else {
 		if userId == 0 {
 			c.JSON(http.StatusOK, UserResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User not exist"},
 			})
+			return
 		} else {
 			// 获得token
 			claims := &myjwt.JWTClaims{
@@ -179,11 +184,13 @@ func UserInfo(c *gin.Context) {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
+		return
 	} else {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 0},
 			User:     user,
 		})
+		return
 	}
 
 	//if user, exist := usersLoginInfo[token]; exist {

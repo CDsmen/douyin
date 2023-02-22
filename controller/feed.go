@@ -41,6 +41,7 @@ func Feed(c *gin.Context) {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql feed error"},
 		})
+		return
 	}
 	fmt.Println("videosList: ", videosList)
 
@@ -52,6 +53,7 @@ func Feed(c *gin.Context) {
 			c.JSON(http.StatusOK, FeedResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 			})
+			return
 		}
 		videosList[id].Author = user
 	}

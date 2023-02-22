@@ -46,11 +46,13 @@ func FavoriteAction(c *gin.Context) {
 			Response: Response{StatusCode: 0, StatusMsg: "Favorite succeeded"},
 			Comment:  comment,
 		})
+		return
 	} else { // 取消点赞
 		err = dal.DB.Raw("CALL del_favorite(?, ?)", claim.UserID, videoid).Scan(&comment).Error
 		c.JSON(http.StatusOK, CommentActionResponse{
 			Response: Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"},
 		})
+		return
 	}
 
 	//if _, exist := usersLoginInfo[token]; exist {
@@ -93,6 +95,7 @@ func FavoriteList(c *gin.Context) {
 		c.JSON(http.StatusOK, VideoListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_favorite error"},
 		})
+		return
 	}
 	fmt.Println("videosList: ", videosList)
 
@@ -104,6 +107,7 @@ func FavoriteList(c *gin.Context) {
 			c.JSON(http.StatusOK, VideoListResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 			})
+			return
 		}
 		videosList[id].Author = user
 	}

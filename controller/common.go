@@ -19,7 +19,7 @@ type Video struct {
 
 type Comment struct {
 	Id         int64  `json:"id,omitempty"`
-	User       User   `json:"user"`
+	User       User   `json:"user" gorm:"-"`
 	Content    string `json:"content,omitempty"`
 	CreateDate string
 

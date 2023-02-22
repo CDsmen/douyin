@@ -1,11 +1,11 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/CDsmen/douyin/dal"
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 )
 
 type CommentListResponse struct {
@@ -56,11 +56,13 @@ func CommentAction(c *gin.Context) {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Pubish Failed"},
 			})
+			return
 		} else {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 0, StatusMsg: "Publishing succeeded"},
 				Comment:  comment,
 			})
+			return
 		}
 	} else { // 删除评论
 		commentid := c.Query("comment_id")
@@ -69,10 +71,12 @@ func CommentAction(c *gin.Context) {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Delete Failed"},
 			})
+			return
 		} else {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 0, StatusMsg: "Delete succeeded"},
 			})
+			return
 		}
 	}
 
@@ -96,7 +100,7 @@ func CommentAction(c *gin.Context) {
 
 // CommentList all videos have same demo comment list
 func CommentList(c *gin.Context) {
-	userid := c.Query("user_id")
+	video_id := c.Query("video_id")
 	strToken := c.Query("token")
 
 	// token不存在
@@ -112,21 +116,18 @@ func CommentList(c *gin.Context) {
 		c.String(http.StatusNotFound, err.Error())
 		return
 	}
-
-	// 鉴权不通过
-	if strconv.FormatInt(claim.UserID, 10) != userid {
-		c.String(http.StatusOK, "Userid != token")
-		return
-	}
+	fmt.Println(claim)
 
 	// 从数据库获取发布列表
 	var commentsList = []Comment{}
-	err = dal.DB.Raw("CALL list_comment(?)", userid).Scan(&commentsList).Error
+	err = dal.DB.Raw("CALL list_comment(?)", video_id).Scan(&commentsList).Error
 	if err != nil {
 		c.JSON(http.StatusOK, CommentListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_comment error"},
 		})
+		return
 	}
+	fmt.Println("commentsList: ", commentsList)
 
 	// 补充user
 	for id, _ := range commentsList {
@@ -136,6 +137,7 @@ func CommentList(c *gin.Context) {
 			c.JSON(http.StatusOK, VideoListResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 			})
+			return
 		}
 		commentsList[id].User = user
 
@@ -143,6 +145,6 @@ func CommentList(c *gin.Context) {
 
 	c.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
-		CommentList: DemoComments,
+		CommentList: commentsList,
 	})
 }

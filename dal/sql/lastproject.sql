@@ -170,8 +170,8 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_favorite`(IN _userid int, IN _vedioid int)
 BEGIN
-	IF not exists(select * from favorite where _userid = userid and _vedioid = vedioid) THEN
-        insert into favorite (userid,vedioid)  VALUES (_userid,_vedioid);
+	IF not exists(select * from favorite where _userid = userid and _vedioid = videoid) THEN
+        insert into favorite (userid,videoid)  VALUES (_userid,_vedioid);
 	end if;
 END ;;
 DELIMITER ;
@@ -191,7 +191,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_vedio`(IN _userid int, IN _title varchar(30), IN _play_url varchar(60), IN _cover_url varchar(60))
 BEGIN
-	insert into vedio (userid,title,paly_url,cover_url,create_time) VALUES (_userid,_title,_paly_url,_cover_url,now());
+	insert into video (userid,title,play_url,cover_url,create_time) VALUES (_userid,_title,_play_url,_cover_url,now());
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -229,7 +229,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `del_favorite`(IN _userid int, IN _vedioid int)
 BEGIN
-	delete from favorite where _userid = userid and _vedioid = vedioid;
+	delete from favorite where _userid = userid and _vedioid = videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;

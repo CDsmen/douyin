@@ -182,6 +182,7 @@ func PublishList(c *gin.Context) {
 		c.JSON(http.StatusOK, VideoListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_video error"},
 		})
+		return
 	}
 
 	var user User
@@ -190,6 +191,7 @@ func PublishList(c *gin.Context) {
 		c.JSON(http.StatusOK, VideoListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
+		return
 	}
 	for id, _ := range videosList {
 		videosList[id].Author = user
