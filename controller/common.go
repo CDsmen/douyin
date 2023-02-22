@@ -14,7 +14,8 @@ type Video struct {
 	CommentCount  int64  `json:"comment_count,omitempty"`
 	IsFavorite    bool   `json:"is_favorite,omitempty"`
 
-	Userid int64 `json:"-"`
+	Userid     int64  `json:"-"`
+	CreateTime int64 `json:"-"`
 }
 
 type Comment struct {

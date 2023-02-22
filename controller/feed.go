@@ -2,11 +2,13 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/CDsmen/douyin/dal"
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"time"
 )
 
 type FeedResponse struct {
@@ -19,7 +21,9 @@ type FeedResponse struct {
 func Feed(c *gin.Context) {
 	latesttime := c.Query("latest_time")
 	strToken := c.Query("token")
-
+	if latesttime == "0" {
+		latesttime = strconv.FormatInt(time.Now().Unix(), 10)
+	}
 	// token不存在
 	err := myjwt.FindToken(strToken)
 	if err != nil {
@@ -36,7 +40,7 @@ func Feed(c *gin.Context) {
 
 	// 从数据库获取发布列表
 	var videosList = []Video{}
-	err = dal.DB.Raw("CALL feed(?, ?)", claim.UserID).Scan(&latesttime).Error
+	err = dal.DB.Raw("CALL feed(?, ?)", claim.UserID, latesttime).Scan(&videosList).Error
 	if err != nil {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql feed error"},
@@ -46,6 +50,7 @@ func Feed(c *gin.Context) {
 	fmt.Println("videosList: ", videosList)
 
 	// 补充user
+	nexttime := time.Now().Unix()
 	for id := range videosList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", videosList[id].Userid).Scan(&user).Error
@@ -56,11 +61,14 @@ func Feed(c *gin.Context) {
 			return
 		}
 		videosList[id].Author = user
+		if videosList[id].CreateTime < nexttime {
+			nexttime = videosList[id].CreateTime
+		}
 	}
 
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
 		VideoList: videosList,
-		NextTime:  time.Now().Unix(),
+		NextTime:  nexttime,
 	})
 }
