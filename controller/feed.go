@@ -46,7 +46,7 @@ func Feed(c *gin.Context) {
 	fmt.Println("videosList: ", videosList)
 
 	// 补充user
-	for id, _ := range videosList {
+	for id := range videosList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", videosList[id].Userid).Scan(&user).Error
 		if err != nil {

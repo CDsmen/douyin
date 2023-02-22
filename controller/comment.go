@@ -130,7 +130,7 @@ func CommentList(c *gin.Context) {
 	fmt.Println("commentsList: ", commentsList)
 
 	// 补充user
-	for id, _ := range commentsList {
+	for id := range commentsList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", commentsList[id].Userid).Scan(&user).Error
 		if err != nil {

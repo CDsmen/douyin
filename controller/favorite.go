@@ -2,11 +2,12 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/CDsmen/douyin/dal"
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // FavoriteAction no practical effect, just check if token is valid
@@ -42,17 +43,21 @@ func FavoriteAction(c *gin.Context) {
 	videoid := c.Query("video_id")
 	if actionType == "1" {
 		err = dal.DB.Raw("CALL add_favorite(?, ?)", claim.UserID, videoid).Scan(&comment).Error
-		c.JSON(http.StatusOK, CommentActionResponse{
-			Response: Response{StatusCode: 0, StatusMsg: "Favorite succeeded"},
-			Comment:  comment,
-		})
-		return
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 0, StatusMsg: "Favorite succeeded"},
+				Comment:  comment,
+			})
+			return
+		}
 	} else { // 取消点赞
 		err = dal.DB.Raw("CALL del_favorite(?, ?)", claim.UserID, videoid).Scan(&comment).Error
-		c.JSON(http.StatusOK, CommentActionResponse{
-			Response: Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"},
-		})
-		return
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"},
+			})
+			return
+		}
 	}
 
 	//if _, exist := usersLoginInfo[token]; exist {
@@ -100,7 +105,7 @@ func FavoriteList(c *gin.Context) {
 	fmt.Println("videosList: ", videosList)
 
 	// 补充user
-	for id, _ := range videosList {
+	for id := range videosList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", videosList[id].Userid).Scan(&user).Error
 		if err != nil {

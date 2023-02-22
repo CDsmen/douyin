@@ -177,7 +177,7 @@ func PublishList(c *gin.Context) {
 
 	// 从数据库获取发布列表
 	var videosList = []Video{}
-	err = dal.DB.Raw("CALL list_vedio(?)", userid).Scan(&videosList).Error
+	err = dal.DB.Raw("CALL list_video(?)", userid).Scan(&videosList).Error
 	if err != nil {
 		c.JSON(http.StatusOK, VideoListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_video error"},
@@ -193,7 +193,7 @@ func PublishList(c *gin.Context) {
 		})
 		return
 	}
-	for id, _ := range videosList {
+	for id := range videosList {
 		videosList[id].Author = user
 	}
 

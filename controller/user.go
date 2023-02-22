@@ -22,7 +22,7 @@ var usersLoginInfo = map[string]User{
 	},
 }
 
-var userIdSequence = int64(1)
+
 
 type UserLoginResponse struct {
 	Response
