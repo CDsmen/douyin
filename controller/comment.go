@@ -50,17 +50,29 @@ func CommentAction(c *gin.Context) {
 	videoid := c.Query("video_id")
 	if actionType == "1" {
 		text := c.Query("comment_text")
-		err = dal.DB.Raw("CALL add_comment(?, ?， ？)", videoid, claim.UserID, text).Scan(&comment).Error
-		c.JSON(http.StatusOK, CommentActionResponse{
-			Response: Response{StatusCode: 0, StatusMsg: "Publishing succeeded"},
-			Comment:  comment,
-		})
+		err = dal.DB.Raw("CALL add_comment(?, ?, ?)", videoid, claim.UserID, text).Scan(&comment).Error
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Pubish Failed"},
+			})
+		} else {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 0, StatusMsg: "Publishing succeeded"},
+				Comment:  comment,
+			})
+		}
 	} else { // 删除评论
 		commentid := c.Query("comment_id")
 		err = dal.DB.Raw("CALL del_comment(?, ?)", videoid, commentid).Scan(&comment).Error
-		c.JSON(http.StatusOK, CommentActionResponse{
-			Response: Response{StatusCode: 0, StatusMsg: "Delete succeeded"},
-		})
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Delete Failed"},
+			})
+		} else {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 0, StatusMsg: "Delete succeeded"},
+			})
+		}
 	}
 
 	//if user, exist := usersLoginInfo[token]; exist {

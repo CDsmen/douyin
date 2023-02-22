@@ -15,6 +15,8 @@ type Video struct {
 	IsFavorite    bool   `json:"is_favorite,omitempty"`
 }
 
+var VideosList = []Video{}
+
 type Comment struct {
 	Id         int64  `json:"id,omitempty"`
 	User       User   `json:"user"`
