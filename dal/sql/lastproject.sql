@@ -151,7 +151,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_comment`(IN _vedioid int, IN _userid int, IN _content varchar(50))
 BEGIN
 	insert into comment (userid,vedioid,content,create_data) value(_userid,_vedioid,_content,now());
-	select commentid id, content, date_format(create_data, '%m-%d') create_date from comment order by commentid desc limit 1;
+	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date from comment order by commentid desc limit 1;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -248,7 +248,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `feed`(IN _userid int, IN lasttime datetime)
 BEGIN
-	select unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = _userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.create_time < lasttime group by v1.videoid limit 30;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = _userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.create_time < lasttime group by v1.videoid limit 30;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -267,8 +267,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `list_comment`(IN _vedioid int)
 BEGIN
-	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date
-		from comment where vedioid = _vedioid order by create_data desc;
+	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date from comment where vedioid = _vedioid order by create_data desc;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -287,7 +286,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `list_favorite`(IN _userid int)
 BEGIN
-	select unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.userid = _userid group by v1.videoid;select unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.videoid in (select videoid from favorite where _userid = userid) group by v1.videoid;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.userid = _userid group by v1.videoid;select unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.videoid in (select videoid from favorite where _userid = userid) group by v1.videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -400,4 +399,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-22 15:40:24
+-- Dump completed on 2023-02-22 16:21:52
