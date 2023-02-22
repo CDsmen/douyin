@@ -5,6 +5,7 @@ import (
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type CommentListResponse struct {
@@ -95,6 +96,51 @@ func CommentAction(c *gin.Context) {
 
 // CommentList all videos have same demo comment list
 func CommentList(c *gin.Context) {
+	userid := c.Query("user_id")
+	strToken := c.Query("token")
+
+	// token不存在
+	err := myjwt.FindToken(strToken)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	// 解析token
+	claim, err := myjwt.VerifyAction(strToken)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	// 鉴权不通过
+	if strconv.FormatInt(claim.UserID, 10) != userid {
+		c.String(http.StatusOK, "Userid != token")
+		return
+	}
+
+	// 从数据库获取发布列表
+	var commentsList = []Comment{}
+	err = dal.DB.Raw("CALL list_comment(?)", userid).Scan(&commentsList).Error
+	if err != nil {
+		c.JSON(http.StatusOK, CommentListResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_comment error"},
+		})
+	}
+
+	// ??????
+	for id, _ := range commentsList {
+		var user User
+		err = dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
+		if err != nil {
+			c.JSON(http.StatusOK, VideoListResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+			})
+		}
+		commentsList[id].User = user
+
+	}
+
 	c.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
 		CommentList: DemoComments,

@@ -84,13 +84,36 @@ func FavoriteList(c *gin.Context) {
 		return
 	}
 
-	//var videoList VideosList
-	//err = dal.DB.Raw("CALL favorite_list(？)", userid).Scan(&comment).Error
+	// 从数据库获取发布列表
+	var videosList = []Video{}
+	err = dal.DB.Raw("CALL list_favorite(?)", userid).Scan(&videosList).Error
+	if err != nil {
+		c.JSON(http.StatusOK, VideoListResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_favorite error"},
+		})
+	}
+
+	// ??
+	for id, _ := range videosList {
+		var user User
+		err = dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
+		if err != nil {
+			c.JSON(http.StatusOK, VideoListResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+			})
+		}
+		videosList[id].Author = user
+	}
 
 	c.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
-			StatusCode: 0,
-		},
-		VideoList: DemoVideos,
+		Response:  Response{StatusCode: 0},
+		VideoList: videosList,
 	})
+
+	//c.JSON(http.StatusOK, VideoListResponse{
+	//	Response: Response{
+	//		StatusCode: 0,
+	//	},
+	//	VideoList: DemoVideos,
+	//})
 }
