@@ -128,10 +128,10 @@ func CommentList(c *gin.Context) {
 		})
 	}
 
-	// ??????
+	// 补充user
 	for id, _ := range commentsList {
 		var user User
-		err = dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
+		err = dal.DB.Raw("CALL user_info(?)", commentsList[id].Userid).Scan(&user).Error
 		if err != nil {
 			c.JSON(http.StatusOK, VideoListResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},

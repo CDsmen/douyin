@@ -305,7 +305,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `list_vedio`(IN _userid int)
 BEGIN
-	select unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.userid = _userid group by v1.videoid;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.userid = _userid group by v1.videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;

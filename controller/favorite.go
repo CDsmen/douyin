@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/CDsmen/douyin/dal"
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
@@ -84,6 +85,7 @@ func FavoriteList(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("userid", userid)
 	// 从数据库获取发布列表
 	var videosList = []Video{}
 	err = dal.DB.Raw("CALL list_favorite(?)", userid).Scan(&videosList).Error
@@ -92,11 +94,12 @@ func FavoriteList(c *gin.Context) {
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_favorite error"},
 		})
 	}
+	fmt.Println("videosList: ", videosList)
 
-	// ??
+	// 补充user
 	for id, _ := range videosList {
 		var user User
-		err = dal.DB.Raw("CALL user_info(?)", userid).Scan(&user).Error
+		err = dal.DB.Raw("CALL user_info(?)", videosList[id].Userid).Scan(&user).Error
 		if err != nil {
 			c.JSON(http.StatusOK, VideoListResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
