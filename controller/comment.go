@@ -75,7 +75,7 @@ func CommentAction(c *gin.Context) {
 			return
 		}
 	} else { // 删除评论
-		err = dal.DB.Raw("CALL del_comment(?, ?)", videoId, commentId).Scan(&comment).Error
+		err = dal.DB.Raw("CALL del_comment(?)", commentId).Scan(&comment).Error
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Delete Failed"},

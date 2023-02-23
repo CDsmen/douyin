@@ -21,7 +21,7 @@ func Feed(c *gin.Context) {
 	latestTime := c.Query("latest_time")
 	strToken := c.Query("token")
 
-	// 参数值检测（非空检测 + 防sql注入）
+	//参数值检测（非空检测 + 防sql注入）
 	if FilteredSQLInject(latestTime, 0) || FilteredSQLInject(strToken, 0) {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
@@ -49,6 +49,7 @@ func Feed(c *gin.Context) {
 		c.String(http.StatusNotFound, err.Error())
 		return
 	}
+	latestTime = strconv.FormatInt(time.Now().Unix(), 10)
 
 	// 从数据库获取发布列表
 	var videosList = []Video{}

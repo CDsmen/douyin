@@ -45,7 +45,7 @@ func GenerateVideoCover(inFileName string, frameNum int, coverName string) strin
 		fmt.Println(err)
 		return ""
 	}
-	coverCul := SeverIp + ":8080" + "/static/video/" + coverName + ".jpg"
+	coverCul := SeverIp + ":8080" + "/static/video_cover/" + coverName + ".jpg"
 	return coverCul
 }
 
@@ -131,8 +131,13 @@ func Publish(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("claim.UserID: ", claim.UserID)
+	fmt.Println("title: ", title)
+	fmt.Println("playUrl: ", playUrl)
+	fmt.Println("coverUrl: ", coverUrl)
+
 	// 保存进数据库
-	err = dal.DB.Raw("CALL add_video(?, ?, ?, ?)", claim.UserID, title, playUrl, coverUrl).Error
+	err = dal.DB.Exec("CALL add_video(?, ?, ?, ?)", claim.UserID, title, playUrl, coverUrl).Error
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,

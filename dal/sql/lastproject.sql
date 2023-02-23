@@ -115,8 +115,8 @@ DROP TABLE IF EXISTS `video`;
 CREATE TABLE `video` (
   `videoid` int NOT NULL AUTO_INCREMENT,
   `userid` int NOT NULL,
-  `play_url` varchar(60) DEFAULT NULL,
-  `cover_url` varchar(60) DEFAULT NULL,
+  `play_url` varchar(100) DEFAULT NULL,
+  `cover_url` varchar(100) DEFAULT NULL,
   `title` varchar(30) DEFAULT NULL,
   `create_time` datetime DEFAULT NULL,
   PRIMARY KEY (`videoid`),
@@ -189,7 +189,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_video`(IN _userid int, IN _title varchar(30), IN _play_url varchar(60), IN _cover_url varchar(60))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_video`(IN _userid int, IN _title varchar(30), IN _play_url varchar(100), IN _cover_url varchar(100))
 BEGIN
 	insert into video (userid,title,play_url,cover_url,create_time) VALUES (_userid,_title,_play_url,_cover_url,now());
 END ;;
@@ -286,7 +286,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `list_favorite`(IN _userid int)
 BEGIN
-	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 right join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.videoid group by v1.videoid;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 right join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.videoid where favorite.userid = _userid group by v1.videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
