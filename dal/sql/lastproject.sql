@@ -25,14 +25,14 @@ DROP TABLE IF EXISTS `comment`;
 CREATE TABLE `comment` (
   `commentid` int NOT NULL AUTO_INCREMENT,
   `userid` int NOT NULL,
-  `vedioid` int DEFAULT NULL,
+  `videoid` int DEFAULT NULL,
   `content` varchar(50) DEFAULT NULL,
   `create_data` datetime DEFAULT NULL,
   PRIMARY KEY (`commentid`),
   KEY `FK_user_comment` (`userid`),
-  KEY `FK_vedio_comment` (`vedioid`),
+  KEY `FK_video_comment` (`videoid`),
   CONSTRAINT `FK_user_comment` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `FK_vedio_comment` FOREIGN KEY (`vedioid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  CONSTRAINT `FK_video_comment` FOREIGN KEY (`videoid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -59,9 +59,9 @@ CREATE TABLE `favorite` (
   `videoid` int NOT NULL,
   PRIMARY KEY (`likeid`),
   KEY `FK_user_like` (`userid`),
-  KEY `FK_vedio_like` (`videoid`),
+  KEY `FK_video_like` (`videoid`),
   CONSTRAINT `FK_user_like` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `FK_vedio_like` FOREIGN KEY (`videoid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  CONSTRAINT `FK_video_like` FOREIGN KEY (`videoid`) REFERENCES `video` (`videoid`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -131,7 +131,7 @@ CREATE TABLE `video` (
 
 LOCK TABLES `video` WRITE;
 /*!40000 ALTER TABLE `video` DISABLE KEYS */;
-INSERT INTO `video` VALUES (1,1,'not','not','testvedio','2023-02-22 07:15:18');
+INSERT INTO `video` VALUES (1,1,'not','not','testvideo','2023-02-22 07:15:18');
 /*!40000 ALTER TABLE `video` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -148,9 +148,9 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_comment`(IN _vedioid int, IN _userid int, IN _content varchar(50))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_comment`(IN _videoid int, IN _userid int, IN _content varchar(50))
 BEGIN
-	insert into comment (userid,vedioid,content,create_data) value(_userid,_vedioid,_content,now());
+	insert into comment (userid,videoid,content,create_data) value(_userid,_videoid,_content,now());
 	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date from comment order by commentid desc limit 1;
 END ;;
 DELIMITER ;
@@ -168,10 +168,10 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_favorite`(IN _userid int, IN _vedioid int)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_favorite`(IN _userid int, IN _videoid int)
 BEGIN
-	IF not exists(select * from favorite where _userid = userid and _vedioid = videoid) THEN
-        insert into favorite (userid,videoid)  VALUES (_userid,_vedioid);
+	IF not exists(select * from favorite where _userid = userid and _videoid = videoid) THEN
+        insert into favorite (userid,videoid)  VALUES (_userid,_videoid);
 	end if;
 END ;;
 DELIMITER ;
@@ -179,7 +179,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `add_vedio` */;
+/*!50003 DROP PROCEDURE IF EXISTS `add_video` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -189,7 +189,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_vedio`(IN _userid int, IN _title varchar(30), IN _play_url varchar(60), IN _cover_url varchar(60))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_video`(IN _userid int, IN _title varchar(30), IN _play_url varchar(60), IN _cover_url varchar(60))
 BEGIN
 	insert into video (userid,title,play_url,cover_url,create_time) VALUES (_userid,_title,_play_url,_cover_url,now());
 END ;;
@@ -227,9 +227,9 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `del_favorite`(IN _userid int, IN _vedioid int)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `del_favorite`(IN _userid int, IN _videoid int)
 BEGIN
-	delete from favorite where _userid = userid and _vedioid = videoid;
+	delete from favorite where _userid = userid and _videoid = videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -248,7 +248,7 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `feed`(IN _userid int, IN lasttime varchar(20))
 BEGIN
-	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = _userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.create_time < from_unixtime(lasttime) group by v1.videoid limit 30;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = _userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.videoid where v1.create_time < from_unixtime(lasttime) group by v1.videoid limit 30;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -265,9 +265,9 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `list_comment`(IN _vedioid int)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `list_comment`(IN _videoid int)
 BEGIN
-	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date from comment where vedioid = _vedioid order by commentid desc;
+	select commentid id, userid, content, date_format(create_data, '%m-%d') create_date from comment where videoid = _videoid order by commentid desc;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -286,14 +286,14 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `list_favorite`(IN _userid int)
 BEGIN
-	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 right join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid group by v1.videoid;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 right join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.videoid group by v1.videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `list_vedio` */;
+/*!50003 DROP PROCEDURE IF EXISTS `list_video` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -303,9 +303,9 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `list_vedio`(IN _userid int)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `list_video`(IN _userid int)
 BEGIN
-	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.vedioid where v1.userid = _userid group by v1.videoid;
+	select v1.userid userid, unix_timestamp(create_time) create_time, v1.videoid id, play_url, cover_url, count(distinct favorite.likeid) favorite_count, count(distinct comment.commentid) comment_count, exists(select * from favorite where videoid = v1.videoid and userid = v1.userid) is_favorite, title from video v1 left join favorite on v1.videoid = favorite.videoid left join comment on v1.videoid = comment.videoid where v1.userid = _userid group by v1.videoid;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;

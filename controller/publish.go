@@ -117,7 +117,7 @@ func Publish(c *gin.Context) {
 	coverurl := GenerateVideoCover(filePath, 1, filename)
 
 	// 保存进数据库
-	err = dal.DB.Raw("CALL add_vedio(?, ?, ?, ?)", claim.UserID, title, playUrl, coverurl).Error
+	err = dal.DB.Raw("CALL add_video(?, ?, ?, ?)", claim.UserID, title, playUrl, coverurl).Error
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -172,7 +172,7 @@ func PublishList(c *gin.Context) {
 
 	// 从数据库获取发布列表
 	var videosList = []Video{}
-	err = dal.DB.Raw("CALL list_vedio(?)", userid).Scan(&videosList).Error
+	err = dal.DB.Raw("CALL list_video(?)", userid).Scan(&videosList).Error
 	if err != nil {
 		c.JSON(http.StatusOK, VideoListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_video error"},
@@ -188,7 +188,7 @@ func PublishList(c *gin.Context) {
 		})
 		return
 	}
-	for id, _ := range videosList {
+	for id := range videosList {
 		videosList[id].Author = user
 	}
 

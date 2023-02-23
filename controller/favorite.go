@@ -1,11 +1,12 @@
 package controller
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/CDsmen/douyin/dal"
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
 // FavoriteAction no practical effect, just check if token is valid
@@ -45,11 +46,15 @@ func FavoriteAction(c *gin.Context) {
 	// 点赞
 	if actionType == "1" {
 		err = dal.DB.Raw("CALL add_favorite(?, ?)", claim.UserID, videoId).Scan(&comment).Error
-		c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Favorite succeeded"})
+		if err != nil {
+			c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Favorite succeeded"})
+		}
 		return
 	} else { // 取消点赞
 		err = dal.DB.Raw("CALL del_favorite(?, ?)", claim.UserID, videoId).Scan(&comment).Error
-		c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"})
+		if err != nil {
+			c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"})
+		}
 		return
 	}
 
@@ -104,7 +109,7 @@ func FavoriteList(c *gin.Context) {
 	}
 
 	// 补充user
-	for id, _ := range videosList {
+	for id := range videosList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", videosList[id].Userid).Scan(&user).Error
 		if err != nil {
