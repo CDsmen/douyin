@@ -22,8 +22,6 @@ var usersLoginInfo = map[string]User{
 	},
 }
 
-var userIdSequence = int64(1)
-
 type UserLoginResponse struct {
 	Response
 	UserId int64  `json:"user_id,omitempty"`
@@ -39,16 +37,24 @@ func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(username, 1) || FilteredSQLInject(password, 1) {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
+	}
+
 	var userId int64
 	err := dal.DB.Raw("CALL register(?, ?)", username, password).Scan(&userId).Error
 	if err != nil {
-		c.JSON(http.StatusOK, UserResponse{
+		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql Register Failed"},
 		})
 		return
 	} else {
 		if userId == 0 {
-			c.JSON(http.StatusOK, UserResponse{
+			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
 			})
 			return
@@ -67,6 +73,7 @@ func Register(c *gin.Context) {
 				return
 			}
 
+			// token map
 			myjwt.TakenGetMap(signedToken)
 
 			c.JSON(http.StatusOK, UserLoginResponse{
@@ -101,17 +108,25 @@ func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(username, 1) || FilteredSQLInject(password, 1) {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
+	}
+
 	var userId int64
 	err := dal.DB.Raw("CALL login(?, ?)", username, password).Scan(&userId).Error
 
 	if err != nil {
-		c.JSON(http.StatusOK, UserResponse{
+		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql Login Failed"},
 		})
 		return
 	} else {
 		if userId == 0 {
-			c.JSON(http.StatusOK, UserResponse{
+			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User not exist"},
 			})
 			return
@@ -130,6 +145,7 @@ func Login(c *gin.Context) {
 				return
 			}
 
+			// token map
 			myjwt.TakenGetMap(signedToken)
 
 			c.JSON(http.StatusOK, UserLoginResponse{
@@ -137,6 +153,7 @@ func Login(c *gin.Context) {
 				UserId:   userId,
 				Token:    signedToken,
 			})
+			return
 		}
 	}
 
@@ -153,10 +170,17 @@ func Login(c *gin.Context) {
 	//}
 }
 
-// 调用mysql的存储过程"user_info" 参数为：user_id
 func UserInfo(c *gin.Context) {
 	userid := c.Query("user_id")
 	strToken := c.Query("token")
+
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(userid, 1) || FilteredSQLInject(strToken, 1) {
+		c.JSON(http.StatusOK, UserResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
+	}
 
 	// token不存在
 	err := myjwt.FindToken(strToken)

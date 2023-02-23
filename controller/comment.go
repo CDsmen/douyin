@@ -21,7 +21,19 @@ type CommentActionResponse struct {
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
 	strToken := c.Query("token")
+	videoId := c.Query("video_id")
 	actionType := c.Query("action_type")
+	text := c.Query("comment_text")
+	commentId := c.Query("comment_id")
+
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(strToken, 1) || FilteredSQLInject(videoId, 1) || FilteredSQLInject(actionType, 1) ||
+		FilteredSQLInject(text, 0) || FilteredSQLInject(commentId, 0) {
+		c.JSON(http.StatusOK, CommentActionResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
+	}
 
 	// token不存在
 	err := myjwt.FindToken(strToken)
@@ -41,17 +53,15 @@ func CommentAction(c *gin.Context) {
 	var comment Comment
 	err = dal.DB.Raw("CALL user_info(?)", claim.UserID).Scan(&comment.User).Error
 	if err != nil {
-		c.JSON(http.StatusOK, UserResponse{
+		c.JSON(http.StatusOK, CommentActionResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
 		return
 	}
 
 	// 发布评论
-	videoid := c.Query("video_id")
 	if actionType == "1" {
-		text := c.Query("comment_text")
-		err = dal.DB.Raw("CALL add_comment(?, ?, ?)", videoid, claim.UserID, text).Scan(&comment).Error
+		err = dal.DB.Raw("CALL add_comment(?, ?, ?)", videoId, claim.UserID, text).Scan(&comment).Error
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Pubish Failed"},
@@ -65,8 +75,7 @@ func CommentAction(c *gin.Context) {
 			return
 		}
 	} else { // 删除评论
-		commentid := c.Query("comment_id")
-		err = dal.DB.Raw("CALL del_comment(?, ?)", videoid, commentid).Scan(&comment).Error
+		err = dal.DB.Raw("CALL del_comment(?, ?)", videoId, commentId).Scan(&comment).Error
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "Mysql Comment Delete Failed"},
@@ -98,10 +107,17 @@ func CommentAction(c *gin.Context) {
 	//}
 }
 
-// CommentList all videos have same demo comment list
 func CommentList(c *gin.Context) {
-	video_id := c.Query("video_id")
 	strToken := c.Query("token")
+	videoId := c.Query("video_id")
+
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(strToken, 1) || FilteredSQLInject(videoId, 1) {
+		c.JSON(http.StatusOK, CommentListResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
+	}
 
 	// token不存在
 	err := myjwt.FindToken(strToken)
@@ -120,21 +136,20 @@ func CommentList(c *gin.Context) {
 
 	// 从数据库获取发布列表
 	var commentsList = []Comment{}
-	err = dal.DB.Raw("CALL list_comment(?)", video_id).Scan(&commentsList).Error
+	err = dal.DB.Raw("CALL list_comment(?)", videoId).Scan(&commentsList).Error
 	if err != nil {
 		c.JSON(http.StatusOK, CommentListResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql list_comment error"},
 		})
 		return
 	}
-	fmt.Println("commentsList: ", commentsList)
 
 	// 补充user
 	for id, _ := range commentsList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", commentsList[id].Userid).Scan(&user).Error
 		if err != nil {
-			c.JSON(http.StatusOK, VideoListResponse{
+			c.JSON(http.StatusOK, CommentListResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 			})
 			return
@@ -147,4 +162,5 @@ func CommentList(c *gin.Context) {
 		Response:    Response{StatusCode: 0},
 		CommentList: commentsList,
 	})
+	return
 }

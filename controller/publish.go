@@ -1,11 +1,14 @@
 package controller
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/CDsmen/douyin/dal"
 	"github.com/CDsmen/douyin/myjwt"
 	"github.com/gin-gonic/gin"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,6 +17,36 @@ import (
 type VideoListResponse struct {
 	Response
 	VideoList []Video `json:"video_list"`
+}
+
+// GenerateVideoCover 获取封面
+func GenerateVideoCover(inFileName string, frameNum int, coverName string) string {
+	buf := bytes.NewBuffer(nil)
+	err := ffmpeg.Input(inFileName).
+		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		WithOutput(buf, os.Stdout).
+		Run()
+	if err != nil {
+		panic(err)
+	}
+
+	filePath := "public/video_cover/" + coverName + ".jpg"
+	outFile, err := os.Create(filePath)
+	fmt.Println(filePath)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, buf)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	coverCul := SeverIp + ":8080" + "/static/video/" + coverName + ".jpg"
+	return coverCul
 }
 
 // Publish check token then save upload file to public directory
@@ -56,20 +89,11 @@ func Publish(c *gin.Context) {
 	}
 	defer fileBytes.Close()
 
-	// 获取当前的工作目录
-	wd, err := os.Getwd()
-	if err != nil {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-		return
-	}
-
-	// 存储到本地 ?? 更改filename
-	filePath := wd + "/public/video/" + file.Filename
-	playurl := SeverIp + ":8080" + "/static/video/" + file.Filename
-	fmt.Println("playurl: ", playurl)
+	// 存储到本地
+	filename := fmt.Sprintf("%v", claim.UserID) + fmt.Sprintf("%v", rand.Int63())
+	filePath := "public/video/" + filename + ".mp4"
+	playUrl := SeverIp + ":8080" + "/static/video/" + filename + ".mp4"
+	fmt.Println("playurl: ", playUrl)
 	outFile, err := os.Create(filePath)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
@@ -89,39 +113,15 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	//// 提取第一帧作为封面 拿到coverurl
-	coverurl := "11"
-	//inputFile, err := os.Open(filePath)
-	//if err != nil {
-	//	c.JSON(http.StatusOK, Response{
-	//		StatusCode: 1,
-	//		StatusMsg:  err.Error(),
-	//	})
-	//	return
-	//}
-	//defer inputFile.Close()
-	//
-	//// 创建转码器
-	//tc := transcoder.New()
-	//
-	//// 设置输入文件
-	//if err := tc.Input(inputFile); err != nil {
-	//	c.JSON(http.StatusOK, Response{
-	//		StatusCode: 1,
-	//		StatusMsg:  err.Error(),
-	//	})
-	//	return
-	//}
-	//
-	//// 提取第一帧作为封面图片
-	//tc.OutputFormat("image2")
-	//tc.OutputOptions("-vframe")
+	// 提取第一帧作为封面 拿到coverurl
+	coverurl := GenerateVideoCover(filePath, 1, filename)
 
 	// 保存进数据库
-	err = dal.DB.Raw("CALL add_video(?, ?, ?, ?)", claim.Id, title, playurl, coverurl).Error
+	err = dal.DB.Raw("CALL add_vedio(?, ?, ?, ?)", claim.UserID, title, playUrl, coverurl).Error
 	if err != nil {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "Mysql add_video error"},
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "Mysql add_video error",
 		})
 		return
 	}
@@ -143,11 +143,6 @@ func Publish(c *gin.Context) {
 	//	})
 	//	return
 	//}
-	//
-	//c.JSON(http.StatusOK, Response{
-	//	StatusCode: 0,
-	//	StatusMsg:  finalName + " uploaded successfully",
-	//})
 }
 
 // PublishList all users have same publish video list
@@ -201,11 +196,4 @@ func PublishList(c *gin.Context) {
 		Response:  Response{StatusCode: 0},
 		VideoList: videosList,
 	})
-
-	//c.JSON(http.StatusOK, VideoListResponse{
-	//	Response: Response{
-	//		StatusCode: 0,
-	//	},
-	//	VideoList: DemoVideos,
-	//})
 }
