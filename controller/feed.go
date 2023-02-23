@@ -21,8 +21,11 @@ type FeedResponse struct {
 func Feed(c *gin.Context) {
 	latesttime := c.Query("latest_time")
 	strToken := c.Query("token")
-	if latesttime == "0" {
+	if latesttime == "0" || latesttime == "" {
 		latesttime = strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	if len([]rune(latesttime)) > 11 {
+		latesttime = latesttime[0:10]
 	}
 	// token不存在
 	err := myjwt.FindToken(strToken)
@@ -30,7 +33,7 @@ func Feed(c *gin.Context) {
 		c.String(http.StatusNotFound, err.Error())
 		return
 	}
-
+	// latesttime = strconv.FormatInt(time.Now().Unix(), 10)
 	// 解析token
 	claim, err := myjwt.VerifyAction(strToken)
 	if err != nil {
@@ -65,10 +68,17 @@ func Feed(c *gin.Context) {
 			nexttime = videosList[id].CreateTime
 		}
 	}
-
-	c.JSON(http.StatusOK, FeedResponse{
-		Response:  Response{StatusCode: 0},
-		VideoList: videosList,
-		NextTime:  nexttime,
-	})
+	// videosList = DemoVideos
+	if len(videosList) == 0 {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response:  Response{StatusCode: 0},
+			VideoList: videosList,
+		})
+	} else {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response:  Response{StatusCode: 0},
+			NextTime:  nexttime,
+			VideoList: videosList,
+		})
+	}
 }
