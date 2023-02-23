@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,13 +18,22 @@ type FeedResponse struct {
 
 // Feed same demo video list for every request
 func Feed(c *gin.Context) {
-	latesttime := c.Query("latest_time")
+	latestTime := c.Query("latest_time")
 	strToken := c.Query("token")
-	if latesttime == "0" || latesttime == "" {
-		latesttime = strconv.FormatInt(time.Now().Unix(), 10)
+
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(latestTime, 0) || FilteredSQLInject(strToken, 0) {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
 	}
-	if len([]rune(latesttime)) > 11 {
-		latesttime = latesttime[0:10]
+
+	if latestTime == "0" || latestTime == "" {
+		latestTime = strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	if len([]rune(latestTime)) > 11 {
+		latestTime = latestTime[0:10]
 	}
 	// token不存在
 	err := myjwt.FindToken(strToken)
@@ -33,7 +41,8 @@ func Feed(c *gin.Context) {
 		c.String(http.StatusNotFound, err.Error())
 		return
 	}
-	// latesttime = strconv.FormatInt(time.Now().Unix(), 10)
+	// latestTime = strconv.FormatInt(time.Now().Unix(), 10)
+
 	// 解析token
 	claim, err := myjwt.VerifyAction(strToken)
 	if err != nil {
@@ -43,17 +52,16 @@ func Feed(c *gin.Context) {
 
 	// 从数据库获取发布列表
 	var videosList = []Video{}
-	err = dal.DB.Raw("CALL feed(?, ?)", claim.UserID, latesttime).Scan(&videosList).Error
+	err = dal.DB.Raw("CALL feed(?, ?)", claim.UserID, latestTime).Scan(&videosList).Error
 	if err != nil {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "Mysql feed error"},
 		})
 		return
 	}
-	fmt.Println("videosList: ", videosList)
 
 	// 补充user
-	nexttime := time.Now().Unix()
+	nextTime := time.Now().Unix()
 	for id := range videosList {
 		var user User
 		err = dal.DB.Raw("CALL user_info(?)", videosList[id].Userid).Scan(&user).Error
@@ -64,10 +72,11 @@ func Feed(c *gin.Context) {
 			return
 		}
 		videosList[id].Author = user
-		if videosList[id].CreateTime < nexttime {
-			nexttime = videosList[id].CreateTime
+		if videosList[id].CreateTime < nextTime {
+			nextTime = videosList[id].CreateTime
 		}
 	}
+
 	// videosList = DemoVideos
 	if len(videosList) == 0 {
 		c.JSON(http.StatusOK, FeedResponse{
@@ -77,7 +86,7 @@ func Feed(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, FeedResponse{
 			Response:  Response{StatusCode: 0},
-			NextTime:  nexttime,
+			NextTime:  nextTime,
 			VideoList: videosList,
 		})
 	}

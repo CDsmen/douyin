@@ -29,11 +29,11 @@ func GenerateVideoCover(inFileName string, frameNum int, coverName string) strin
 		Run()
 	if err != nil {
 		panic(err)
+		return ""
 	}
 
 	filePath := "public/video_cover/" + coverName + ".jpg"
 	outFile, err := os.Create(filePath)
-	fmt.Println(filePath)
 	if err != nil {
 		fmt.Println(err)
 		return ""
@@ -53,6 +53,15 @@ func GenerateVideoCover(inFileName string, frameNum int, coverName string) strin
 func Publish(c *gin.Context) {
 	strToken := c.PostForm("token")
 	title := c.PostForm("title")
+
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(strToken, 1) || FilteredSQLInject(title, 1) {
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "参数值不符合要求",
+		})
+		return
+	}
 
 	// token不存在
 	err := myjwt.FindToken(strToken)
@@ -93,7 +102,6 @@ func Publish(c *gin.Context) {
 	filename := fmt.Sprintf("%v", claim.UserID) + fmt.Sprintf("%v", rand.Int63())
 	filePath := "public/video/" + filename + ".mp4"
 	playUrl := SeverIp + ":8080" + "/static/video/" + filename + ".mp4"
-	fmt.Println("playurl: ", playUrl)
 	outFile, err := os.Create(filePath)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
@@ -113,11 +121,18 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	// 提取第一帧作为封面 拿到coverurl
-	coverurl := GenerateVideoCover(filePath, 1, filename)
+	// 提取第一帧作为封面 拿到coverUrl
+	coverUrl := GenerateVideoCover(filePath, 1, filename)
+	if coverUrl == "" {
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			StatusMsg:  "coverUrl error",
+		})
+		return
+	}
 
 	// 保存进数据库
-	err = dal.DB.Raw("CALL add_video(?, ?, ?, ?)", claim.UserID, title, playUrl, coverurl).Error
+	err = dal.DB.Raw("CALL add_video(?, ?, ?, ?)", claim.UserID, title, playUrl, coverUrl).Error
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -131,6 +146,7 @@ func Publish(c *gin.Context) {
 		StatusCode: 0,
 		StatusMsg:  file.Filename + " uploaded successfully",
 	})
+	return
 
 	//filename := filepath.Base(data.Filename)
 	//user := usersLoginInfo[token]
@@ -149,6 +165,14 @@ func Publish(c *gin.Context) {
 func PublishList(c *gin.Context) {
 	userid := c.Query("user_id")
 	strToken := c.Query("token")
+
+	// 参数值检测（非空检测 + 防sql注入）
+	if FilteredSQLInject(userid, 1) || FilteredSQLInject(strToken, 1) {
+		c.JSON(http.StatusOK, VideoListResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "参数值不符合要求"},
+		})
+		return
+	}
 
 	// token不存在
 	err := myjwt.FindToken(strToken)
@@ -196,4 +220,5 @@ func PublishList(c *gin.Context) {
 		Response:  Response{StatusCode: 0},
 		VideoList: videosList,
 	})
+	return
 }
