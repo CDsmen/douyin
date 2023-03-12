@@ -29,7 +29,6 @@ func GenerateVideoCover(inFileName string, frameNum int, coverName string) strin
 		Run()
 	if err != nil {
 		panic(err)
-		return ""
 	}
 
 	filePath := "public/video_cover/" + coverName + ".jpg"

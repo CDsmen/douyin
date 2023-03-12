@@ -47,14 +47,16 @@ func FavoriteAction(c *gin.Context) {
 	if actionType == "1" {
 		err = dal.DB.Raw("CALL add_favorite(?, ?)", claim.UserID, videoId).Scan(&comment).Error
 		if err != nil {
-			c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Favorite succeeded"})
+			c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Favorite fail"})
 		}
+		c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Favorite succeeded"})
 		return
 	} else { // 取消点赞
 		err = dal.DB.Raw("CALL del_favorite(?, ?)", claim.UserID, videoId).Scan(&comment).Error
 		if err != nil {
-			c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"})
+			c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Delete favorite fail"})
 		}
+		c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Delete favorite succeeded"})
 		return
 	}
 

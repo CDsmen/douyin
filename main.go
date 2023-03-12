@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	controller.SeverIp = "http://192.168.2.244" //127.0.0.1
+	controller.SeverIp = "http://192.168.2.91" //127.0.0.1
 
 	go service.RunMessageServer()
 
